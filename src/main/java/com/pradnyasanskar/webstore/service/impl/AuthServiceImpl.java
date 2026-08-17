@@ -4,6 +4,10 @@ import com.pradnyasanskar.webstore.dto.LoginRequestDTO;
 import com.pradnyasanskar.webstore.dto.LoginResponseDTO;
 import com.pradnyasanskar.webstore.dto.RegisterRequestDTO;
 import com.pradnyasanskar.webstore.dto.UserResponseDTO;
+import com.pradnyasanskar.webstore.dto.ForgotPasswordRequestDTO;
+import com.pradnyasanskar.webstore.dto.ResetPasswordRequestDTO;
+import com.pradnyasanskar.webstore.entity.PasswordResetToken;
+import com.pradnyasanskar.webstore.repository.PasswordResetTokenRepository;
 import com.pradnyasanskar.webstore.entity.Role;
 import com.pradnyasanskar.webstore.entity.User;
 import com.pradnyasanskar.webstore.enums.AccountStatus;
@@ -33,6 +37,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -118,10 +125,70 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtService.generateToken(userDetails);
 
-        return new LoginResponseDTO(
-                token,
-                user.getRole().getRoleName(),
-                "Login Successful"
-        );
+        UserResponseDTO userResponse = new UserResponseDTO();
+        userResponse.setUserId(user.getUserId());
+        userResponse.setFirstName(user.getFirstName());
+        userResponse.setLastName(user.getLastName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setMobileNumber(user.getMobileNumber());
+        userResponse.setRole(user.getRole().getRoleName());
+
+        return new LoginResponseDTO(userResponse, token);
     }
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequestDTO requestDTO) {
+
+        User user = userRepository.findByEmail(requestDTO.getEmail())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        // Generate a secure random token
+        String token = java.util.UUID.randomUUID().toString();
+
+        // Token expires after 15 minutes
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(15);
+
+        PasswordResetToken resetToken = new PasswordResetToken();
+
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiresAt(expiresAt);
+
+        passwordResetTokenRepository.save(resetToken);
+
+        System.out.println("PASSWORD RESET TOKEN: " + token);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequestDTO requestDTO) {
+
+        // 1. Find the reset token
+        PasswordResetToken resetToken =
+                passwordResetTokenRepository.findByToken(requestDTO.getToken())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Invalid reset token."));
+
+        // 2. Check whether token has expired
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Reset token has expired.");
+        }
+
+        // 3. Get the user associated with the token
+        User user = resetToken.getUser();
+
+        // 4. Encrypt the new password
+        String encodedPassword =
+                passwordEncoder.encode(requestDTO.getNewPassword());
+
+        // 5. Update user's password
+        user.setPasswordHash(encodedPassword);
+        user.setUpdatedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+
+        // 6. Delete token so it cannot be reused
+        passwordResetTokenRepository.delete(resetToken);
+    }
+
 }

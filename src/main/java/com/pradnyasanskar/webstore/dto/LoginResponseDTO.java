@@ -2,17 +2,23 @@ package com.pradnyasanskar.webstore.dto;
 
 public class LoginResponseDTO {
 
+    private UserResponseDTO user;
     private String token;
-    private String role;
-    private String message;
 
     public LoginResponseDTO() {
     }
 
-    public LoginResponseDTO(String token, String role, String message) {
+    public LoginResponseDTO(UserResponseDTO user, String token) {
+        this.user = user;
         this.token = token;
-        this.role = role;
-        this.message = message;
+    }
+
+    public UserResponseDTO getUser() {
+        return user;
+    }
+
+    public void setUser(UserResponseDTO user) {
+        this.user = user;
     }
 
     public String getToken() {
@@ -21,21 +27,5 @@ public class LoginResponseDTO {
 
     public void setToken(String token) {
         this.token = token;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }

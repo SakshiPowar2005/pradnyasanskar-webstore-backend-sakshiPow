@@ -33,6 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        // Skip JWT validation for CORS preflight OPTIONS requests
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         System.out.println("========== JWT FILTER EXECUTED ==========");
 
         final String authHeader = request.getHeader("Authorization");
