@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/refunds")
+@RequestMapping("/api/refunds")
 @CrossOrigin(origins = "*")
 public class RefundController {
 
@@ -50,7 +50,7 @@ public class RefundController {
     // GET REFUND BY ID
     // =====================================================
 
-    @GetMapping("/{refundId}")
+    @GetMapping("/api/{refundId}")
     public ResponseEntity<RefundResponseDTO> getRefundById(
             @PathVariable Long refundId) {
 
@@ -62,7 +62,7 @@ public class RefundController {
     // GET REFUNDS BY PAYMENT
     // =====================================================
 
-    @GetMapping("/payment/{paymentId}")
+    @GetMapping("/api/payment/{paymentId}")
     public ResponseEntity<List<RefundResponseDTO>> getRefundsByPayment(
             @PathVariable Long paymentId) {
 
@@ -74,7 +74,7 @@ public class RefundController {
     // UPDATE REFUND STATUS
     // =====================================================
 
-    @PatchMapping("/{refundId}/status")
+    @PatchMapping("/api/{refundId}/status")
     public ResponseEntity<RefundResponseDTO> updateRefundStatus(
 
             @PathVariable Long refundId,

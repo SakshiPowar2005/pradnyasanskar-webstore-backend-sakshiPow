@@ -5,6 +5,6 @@ public enum ReturnStatus {
     REQUESTED,
     APPROVED,
     REJECTED,
-    PROCESSED
+    COMPLETED
 
 }
